@@ -1,6 +1,6 @@
 package com.example.pacetimer
 
-import PaceTimerScreen
+// import PaceTimerScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent

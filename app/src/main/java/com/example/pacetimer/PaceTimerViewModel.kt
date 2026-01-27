@@ -1,3 +1,6 @@
+package com.example.pacetimer
+
+import Interval
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
