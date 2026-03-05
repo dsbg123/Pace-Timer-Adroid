@@ -1,3 +1,5 @@
+package com.example.pacetimer
+
 import androidx.compose.ui.graphics.Color
 
 data class Interval(

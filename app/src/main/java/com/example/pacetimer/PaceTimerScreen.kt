@@ -1,5 +1,16 @@
 package com.example.pacetimer
 
+import androidx.compose.foundation.layout.width
+// import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+
+import androidx.compose.runtime.remember
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -17,12 +28,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -34,9 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -49,11 +55,48 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.gestures.detectTapGestures
+//import androidx.compose.foundation.gestures.pointerInput
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.ui.Alignment
+
+
+
 
 @Composable
 fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
+    // Edit/Add Dialog States
+    var showTimerDialog by remember { mutableStateOf(false) }
+    var editingIndex by remember { mutableStateOf(-1) } // -1=Add, >=0=Edit
+
+    if (showTimerDialog) {
+        val editingInterval = if (editingIndex >= 0) {
+            viewModel.getIntervalForEdit(editingIndex)
+        } else null
+
+        TimerDialog(
+            initialInterval = editingInterval,
+            onDismiss = {
+                showTimerDialog = false
+                editingIndex = -1
+            },
+            onSave = { name, minutes, color, sound ->
+                if (editingIndex >= 0) {
+                    viewModel.updateInterval(editingIndex, name, minutes, color, sound)
+                } else {
+                    viewModel.addInterval(name, minutes, color, sound)
+                }
+                showTimerDialog = false
+                editingIndex = -1
+            }
+        )
+    }
+
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
+    LocalContext.current
 
     LaunchedEffect(Unit) {
         viewModel.onIntervalEnd = {
@@ -102,6 +145,13 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
             fontWeight = FontWeight.Black,
             color = Color.White
         )
+        Text(
+            text = "Endzeit: ${formatTime(System.currentTimeMillis() + viewModel.currentTimeLeft, true)}",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.White.copy(alpha = 0.8f)
+            // modifier = Modifier.padding(top = 8.dp)
+        )
 
         Spacer(modifier = Modifier.height(48.dp))
 
@@ -119,82 +169,127 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
             FloatingActionButton(onClick = { viewModel.resetTimer() }) {
                 Text("R")
             }
+            FloatingActionButton(
+                onClick = { viewModel.nextInterval() },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.Default.SkipNext, "Nächstes")
+            }
+
+            // ← NEU: ZURÜCK ⏮️
+            FloatingActionButton(
+                onClick = { viewModel.previousInterval() },
+                modifier = Modifier.size(48.dp)
+            ) {
+                Icon(Icons.Default.SkipPrevious, "Vorheriges")
+            }
         }
 
         Spacer(modifier = Modifier.height(48.dp))
 
         LazyColumn {
-            items(viewModel.intervals) { interval ->
+            itemsIndexed(viewModel.intervals) { index, interval ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .clickable {
+                            viewModel.moveTo(index)  // Klick: Timer aktivieren
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    editingIndex = index  // Long-Press: Edit
+                                    showTimerDialog = true
+                                }
+                            )
+                        },
                     colors = CardDefaults.cardColors(containerColor = interval.color)
                 ) {
-                    Text(
-                        text = "${interval.name}: ${interval.duration / 60000} min",
+                    Row(
                         modifier = Modifier.padding(16.dp),
-                        color = Color.Black
-                    )
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Farbkreis (optional)
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(interval.color)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Name + Dauer
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = interval.name,
+                                color = Color.Gray,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "${interval.duration / 60000} min",
+                                color = Color.Black.copy(alpha = 0.7f),
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        // Aktiv? Markierung
+                        if (index == viewModel.currentIntervalIndex) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Aktiv",
+                                tint = Color.Black,
+                                modifier = Modifier.size(30.dp)
+                            )
+                        }
+                        // Delete Button (immer sichtbar)
+                        IconButton(onClick = {
+                            viewModel.removeInterval(index)
+                        }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Löschen",
+                                tint = Color.Red
+                            )
+                        }
+
+                    }
                 }
             }
         }
 
+
         Spacer(modifier = Modifier.height(24.dp))
 
-        AddIntervalForm(viewModel)
+        AddIntervalForm(
+            viewModel = viewModel,
+            onAddClicked = {
+                editingIndex = -1  // Add-Modus
+                showTimerDialog = true
+            }
+        )
     }
 }
 
 @Composable
-private fun AddIntervalForm(viewModel: PaceTimerViewModel) {
-    var name by remember { mutableStateOf("Set 1") }
-    var minutes by remember { mutableStateOf(5) }
-    var color by remember { mutableStateOf(Color.Yellow) }
-    var soundEnabled by remember { mutableStateOf(true) }
+private fun AddIntervalForm(
+        viewModel: PaceTimerViewModel,
+        onAddClicked: () -> Unit
+) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = minutes.toString(),
-            onValueChange = { minutes = it.toIntOrNull() ?: 5 },
-            label = { Text("Minutes") },
-            modifier = Modifier.fillMaxWidth()
-        )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ColorPickerButton(Color.Red, color) { color = it }
-            ColorPickerButton(Color.Yellow, color) { color = it }
-            ColorPickerButton(Color.Blue, color) { color = it }
-            ColorPickerButton(Color.Green, color) { color = it }
-            ColorPickerButton(Color.Magenta, color) { color = it }
-        }
-
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Checkbox(
-                checked = soundEnabled,
-                onCheckedChange = { soundEnabled = it }
-            )
-            Text("Sound On")
+            FloatingActionButton(
+                onClick = onAddClicked
+            ) {
+                Icon(Icons.Filled.Add, "Neuer Timer")
+            }
+
         }
 
-        Button(
-            onClick = {
-                viewModel.addInterval(name, minutes, color, soundEnabled)
-                name = "New Section"
-                minutes = 5
-            },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Add Interval")
-        }
     }
 }
 
@@ -209,9 +304,9 @@ private fun ColorPickerButton(
             .size(50.dp)
             .clip(CircleShape)
             .background(color)
-            .border(
-                3.dp, Color.Black,
-                if (color == selected) CircleShape else CircleShape
+            .border( 3.dp,
+                if (color == selected) Color.Black else Color.Transparent,
+                 CircleShape
             )
             .clickable { onSelect(color) }
     )
@@ -223,3 +318,109 @@ fun formatTime(ms: Long): String {
     val seconds = totalSeconds % 60
     return "%d:%02d".format(minutes, seconds)
 }
+
+@Composable
+private fun TimerDialog(
+    initialInterval: Interval? = null,
+    onDismiss: () -> Unit,
+    onSave: (String, Int, Color, Boolean) -> Unit
+) {
+    var name by remember(initialInterval) {
+        mutableStateOf(initialInterval?.name ?: "Satz 1")
+    }
+    var minutesText by remember(initialInterval) {
+        mutableStateOf((initialInterval?.duration?.div(60000) ?: 10).toString())
+    }
+    var selectedColor by remember(initialInterval) {
+        mutableStateOf(initialInterval?.color ?: Color.Blue)
+    }
+    var soundEnabled by remember(initialInterval) {
+        mutableStateOf(initialInterval?.soundEnabled ?: false)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (initialInterval != null) "Bearbeiten" else "Neuer Timer") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (name.isNotEmpty()) {
+                            IconButton(onClick = {name = ""}) {
+                                Icon(Icons.Default.Clear, contentDescription = "Löschen")
+                            }
+                        }
+                    }
+                )
+                OutlinedTextField(
+                    value = minutesText,
+                    onValueChange = { minutesText = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("Minuten") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        if (minutesText.isNotEmpty()) {
+                            IconButton(onClick = {minutesText = ""}) {
+                                Icon(Icons.Default.Clear, contentDescription = "Löschen")
+                            }
+                        }
+                    }
+                )
+
+
+                Text("Farbe:", fontWeight = FontWeight.Medium)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    ColorPickerButton(Color.Red, selectedColor) { selectedColor = it }
+                    ColorPickerButton(Color.Yellow, selectedColor) { selectedColor = it }
+                    ColorPickerButton(Color.Blue, selectedColor) { selectedColor = it }
+                    ColorPickerButton(Color.Green, selectedColor) { selectedColor = it }
+                    ColorPickerButton(Color.Magenta, selectedColor) { selectedColor = it }
+                }
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = soundEnabled,
+                        onCheckedChange = { soundEnabled = it }
+                    )
+                    Text("Sound On")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val minutes = minutesText.toIntOrNull() ?: 10
+                onSave(name, minutes, selectedColor, soundEnabled)
+            }) { Text("Speichern") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Abbrechen") } }
+    )
+}
+
+fun formatTime(ms: Long, showEndTime: Boolean = false): String {
+    if (ms < 0) return if (showEndTime) "--:--" else "00:00"
+
+    return if (showEndTime) {
+        // Endzeit-Format HH:MM
+        val date = java.util.Date(ms)
+        val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        sdf.format(date)
+    } else {
+        // Countdown MM:SS
+        val totalSeconds = ms / 1000
+        val minutes = totalSeconds / 60
+        val seconds = totalSeconds % 60
+        "%d:%02d".format(minutes, seconds)
+    }
+}
+
+
+
+
