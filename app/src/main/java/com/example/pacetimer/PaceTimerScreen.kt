@@ -1,5 +1,8 @@
 package com.example.pacetimer
 
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.width
 // import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.AlertDialog
@@ -9,7 +12,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
-
 import androidx.compose.runtime.remember
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -64,10 +66,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.Alignment
 
 
-
-
 @Composable
-fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
+fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     // Edit/Add Dialog States
     var showTimerDialog by remember { mutableStateOf(false) }
     var editingIndex by remember { mutableStateOf(-1) } // -1=Add, >=0=Edit
@@ -146,7 +146,12 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
             color = Color.White
         )
         Text(
-            text = "Endzeit: ${formatTime(System.currentTimeMillis() + viewModel.currentTimeLeft, true)}",
+            text = "Endzeit: ${
+                formatTime(
+                    System.currentTimeMillis() + viewModel.currentTimeLeft,
+                    true
+                )
+            }",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = Color.White.copy(alpha = 0.8f)
@@ -174,14 +179,6 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
                 modifier = Modifier.size(48.dp)
             ) {
                 Icon(Icons.Default.SkipNext, "Nächstes")
-            }
-
-            // ← NEU: ZURÜCK ⏮️
-            FloatingActionButton(
-                onClick = { viewModel.previousInterval() },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(Icons.Default.SkipPrevious, "Vorheriges")
             }
         }
 
@@ -273,8 +270,8 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = viewModel()) {
 
 @Composable
 private fun AddIntervalForm(
-        viewModel: PaceTimerViewModel,
-        onAddClicked: () -> Unit
+    viewModel: PaceTimerViewModel,
+    onAddClicked: () -> Unit
 ) {
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -304,9 +301,10 @@ private fun ColorPickerButton(
             .size(50.dp)
             .clip(CircleShape)
             .background(color)
-            .border( 3.dp,
+            .border(
+                3.dp,
                 if (color == selected) Color.Black else Color.Transparent,
-                 CircleShape
+                CircleShape
             )
             .clickable { onSelect(color) }
     )
@@ -351,7 +349,7 @@ private fun TimerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         if (name.isNotEmpty()) {
-                            IconButton(onClick = {name = ""}) {
+                            IconButton(onClick = { name = "" }) {
                                 Icon(Icons.Default.Clear, contentDescription = "Löschen")
                             }
                         }
@@ -365,7 +363,7 @@ private fun TimerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         if (minutesText.isNotEmpty()) {
-                            IconButton(onClick = {minutesText = ""}) {
+                            IconButton(onClick = { minutesText = "" }) {
                                 Icon(Icons.Default.Clear, contentDescription = "Löschen")
                             }
                         }

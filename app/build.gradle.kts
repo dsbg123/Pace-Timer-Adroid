@@ -47,9 +47,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended) // Add this line
-    implementation("androidx.media3:media3-exoplayer:1.9.1") // Für Sound (optional)
-    implementation("androidx.compose.animation:animation:1.10.1")
+    implementation("androidx.media3:media3-exoplayer:1.9.2") // Für Sound (optional)
+    implementation("androidx.compose.animation:animation:1.10.4")
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.mediation.test.suite)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,4 +58,6 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences-core:1.1.1")
 }

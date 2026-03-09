@@ -6,5 +6,5 @@ data class Interval(
     val name: String,
     val duration: Long,  // in ms
     val color: Color,
-    val soundEnabled: Boolean = true  // Akustik optional
+    val soundEnabled: Boolean = true,  // Akustik optional
 )
