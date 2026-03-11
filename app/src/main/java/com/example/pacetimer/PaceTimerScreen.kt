@@ -64,6 +64,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.Alignment
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.FloatingActionButtonDefaults
 
 
 @Composable
@@ -115,157 +117,201 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
         label = "blink"
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        val currentName = if (viewModel.currentIntervalIndex < viewModel.intervals.size)
-            viewModel.intervals[viewModel.currentIntervalIndex].name else "Done!"
-        Text(
-            text = currentName,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.graphicsLayer {
-                scaleX = scale.value
-                scaleY = scale.value
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                editingIndex = -1
+                showTimerDialog = true
+            }) {
+                Icon(Icons.Default.Add, "Neuer Timer")
             }
-        )
+        },
+        content = { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                //verticalArrangement = Arrangement.Center
+            ) {
+                // ✅ NEUER farbiger Rahmen um Timer-Display
+                val currentName = if (viewModel.currentIntervalIndex < viewModel.intervals.size)
+                    viewModel.intervals[viewModel.currentIntervalIndex].name else "Done!"
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Text(
-            text = formatTime(viewModel.currentTimeLeft),
-            fontSize = 72.sp,
-            fontWeight = FontWeight.Black,
-            color = Color.White
-        )
-        Text(
-            text = "Endzeit: ${
-                formatTime(
-                    System.currentTimeMillis() + viewModel.currentTimeLeft,
-                    true
+                val borderColor by animateColorAsState(  // Animation für Rahmen
+                    targetValue = viewModel.currentBackgroundColor,
+                    animationSpec = tween(800),
+                    label = "border_color"
                 )
-            }",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.White.copy(alpha = 0.8f)
-            // modifier = Modifier.padding(top = 8.dp)
-        )
 
-        Spacer(modifier = Modifier.height(48.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            FloatingActionButton(
-                onClick = { if (!viewModel.isRunning.value) viewModel.startTimer() }
-            ) {
-                Icon(Icons.Default.PlayArrow, "Start")
-            }
-            FloatingActionButton(
-                onClick = { if (viewModel.isRunning.value) viewModel.stopTimer() }
-            ) {
-                Icon(Icons.Filled.Stop, "Stop")
-            }
-            FloatingActionButton(onClick = { viewModel.resetTimer() }) {
-                Text("R")
-            }
-            FloatingActionButton(
-                onClick = { viewModel.nextInterval() },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(Icons.Default.SkipNext, "Nächstes")
-            }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        LazyColumn {
-            itemsIndexed(viewModel.intervals) { index, interval ->
-                Card(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .clickable {
-                            viewModel.moveTo(index)  // Klick: Timer aktivieren
-                        }
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = {
-                                    editingIndex = index  // Long-Press: Edit
-                                    showTimerDialog = true
-                                }
-                            )
-                        },
-                    colors = CardDefaults.cardColors(containerColor = interval.color)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Farbkreis (optional)
-                        Box(
-                            modifier = Modifier
-                                .size(12.dp)
-                                .clip(CircleShape)
-                                .background(interval.color)
+                        .fillMaxWidth(0.9f)
+                        .padding(vertical = 16.dp)
+                        .border(
+                            width = 12.dp,
+                            color = borderColor,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
                         )
-                        Spacer(modifier = Modifier.width(12.dp))
+                        .background(
+                            Color.Black.copy(alpha = 0.3f),  // Leicht getönt innen
+                            androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+                        )
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = currentName,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.graphicsLayer {
+                                scaleX = scale.value
+                                scaleY = scale.value
+                            }
+                        )
 
-                        // Name + Dauer
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = interval.name,
-                                color = Color.Gray,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "${interval.duration / 60000} min",
-                                color = Color.Black.copy(alpha = 0.7f),
-                                fontSize = 14.sp
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        // Aktiv? Markierung
-                        if (index == viewModel.currentIntervalIndex) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Aktiv",
-                                tint = Color.Black,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                        // Delete Button (immer sichtbar)
-                        IconButton(onClick = {
-                            viewModel.removeInterval(index)
-                        }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Löschen",
-                                tint = Color.Red
-                            )
-                        }
+                        Text(
+                            text = formatTime(viewModel.currentTimeLeft),
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            textAlign = TextAlign.Center
+                        )
 
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Endzeit: ${
+                                formatTime(
+                                    System.currentTimeMillis() + viewModel.currentTimeLeft,
+                                    true
+                                )
+                            }",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White.copy(alpha = 0.9f)
+                        )
                     }
                 }
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    FloatingActionButton(
+                        onClick = { if (!viewModel.isRunning.value) viewModel.startTimer() }
+                    ) {
+                        Icon(Icons.Default.PlayArrow, "Start")
+                    }
+                    FloatingActionButton(
+                        onClick = { if (viewModel.isRunning.value) viewModel.stopTimer() }
+                    ) {
+                        Icon(Icons.Filled.Stop, "Stop")
+                    }
+                    FloatingActionButton(onClick = { viewModel.resetTimer() }) {
+                        Text("R")
+                    }
+                    FloatingActionButton(
+                        onClick = { viewModel.nextInterval() },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Default.SkipNext, "Nächstes")
+                    }
+                }
+
+                // ← NEU: ZURÜCK ⏮️
+                FloatingActionButton(
+                    onClick = { viewModel.previousInterval() },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(Icons.Default.SkipPrevious, "Vorheriges")
+                }
+
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                LazyColumn {
+                    itemsIndexed(viewModel.intervals) { index, interval ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    viewModel.moveTo(index)  // Klick: Timer aktivieren
+                                }
+                                .pointerInput(Unit) {
+                                    detectTapGestures(
+                                        onLongPress = {
+                                            editingIndex = index  // Long-Press: Edit
+                                            showTimerDialog = true
+                                        }
+                                    )
+                                },
+                            colors = CardDefaults.cardColors(containerColor = interval.color)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Farbkreis (optional)
+                                Box(
+                                    modifier = Modifier
+                                        .size(12.dp)
+                                        .clip(CircleShape)
+                                        .background(interval.color)
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // Name + Dauer
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = interval.name,
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "${interval.duration / 60000} min",
+                                        color = Color.Black.copy(alpha = 0.7f),
+                                        fontSize = 14.sp
+                                    )
+                                }
+
+                                // Aktiv? Markierung
+                                if (index == viewModel.currentIntervalIndex) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayArrow,
+                                        contentDescription = "Aktiv",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
+                                // Delete Button (immer sichtbar)
+                                IconButton(onClick = {
+                                    viewModel.removeInterval(index)
+                                }) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "Löschen",
+                                        tint = Color.Red
+                                    )
+                                }
+
+                            }
+                        }
+                    }
+                }
+
+
+                //   Spacer(modifier = Modifier.height(24.dp))
             }
+
         }
-
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        AddIntervalForm(
-            viewModel = viewModel,
-            onAddClicked = {
-                editingIndex = -1  // Add-Modus
-                showTimerDialog = true
-            }
-        )
-    }
+    )
 }
 
 @Composable

@@ -5,9 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.pacetimer"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.pacetimer"
@@ -35,6 +33,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -46,12 +47,15 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended) // Add this line
-    implementation("androidx.media3:media3-exoplayer:1.9.2") // Für Sound (optional)
-    implementation("androidx.compose.animation:animation:1.10.4")
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.mediation.test.suite)
+    
     testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -60,4 +64,8 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.datastore:datastore-preferences-core:1.1.1")
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }
