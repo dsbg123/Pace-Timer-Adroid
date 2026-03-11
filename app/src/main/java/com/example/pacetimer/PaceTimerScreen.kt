@@ -1,10 +1,7 @@
 package com.example.pacetimer
 
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.width
-// import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.IconButton
@@ -50,13 +47,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.gestures.detectTapGestures
 //import androidx.compose.foundation.gestures.pointerInput
 import androidx.compose.ui.input.pointer.pointerInput
@@ -65,7 +60,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.FloatingActionButtonDefaults
 
 
 @Composable
@@ -144,7 +138,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                     animationSpec = tween(800),
                     label = "border_color"
                 )
-
+                // Textanzeige in der Box mit Rahmen
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
@@ -201,7 +195,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                 }
 
                 Spacer(modifier = Modifier.height(48.dp))
-
+                // NavigationsButtons
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     FloatingActionButton(
                         onClick = { if (!viewModel.isRunning.value) viewModel.startTimer() }
@@ -218,23 +212,20 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                     }
                     FloatingActionButton(
                         onClick = { viewModel.nextInterval() },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(Icons.Default.SkipNext, "Nächstes")
                     }
+                    FloatingActionButton(
+                        onClick = { viewModel.previousInterval() },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(Icons.Default.SkipPrevious, "Vorheriges")
+                    }
                 }
 
-                // ← NEU: ZURÜCK ⏮️
-                FloatingActionButton(
-                    onClick = { viewModel.previousInterval() },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(Icons.Default.SkipPrevious, "Vorheriges")
-                }
-
-
-                Spacer(modifier = Modifier.height(48.dp))
-
+                Spacer(modifier = Modifier.height(36.dp))
+                // Interval-Liste
                 LazyColumn {
                     itemsIndexed(viewModel.intervals) { index, interval ->
                         Card(
@@ -307,7 +298,6 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                 }
 
 
-                //   Spacer(modifier = Modifier.height(24.dp))
             }
 
         }
