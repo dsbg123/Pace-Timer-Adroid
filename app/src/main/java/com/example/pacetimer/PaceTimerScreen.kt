@@ -57,9 +57,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.Carpenter
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.graphics.Color.Companion.White
 
 
 @Composable
@@ -124,7 +128,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black)
+                    .background(backgroundColor)
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 //verticalArrangement = Arrangement.Center
@@ -149,7 +153,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                             shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
                         )
                         .background(
-                            Color.Black.copy(alpha = 0.3f),  // Leicht getönt innen
+                            Color.Black.copy(alpha = 0.6f),  // Leicht getönt innen
                             androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
                         )
                         .padding(24.dp),
@@ -160,7 +164,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                             text = currentName,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = White,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.graphicsLayer {
                                 scaleX = scale.value
@@ -174,7 +178,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                             text = formatTime(viewModel.currentTimeLeft),
                             fontSize = 72.sp,
                             fontWeight = FontWeight.Black,
-                            color = Color.White,
+                            color = White,
                             textAlign = TextAlign.Center
                         )
 
@@ -189,7 +193,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                             }",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color.White.copy(alpha = 0.9f)
+                            color = White.copy(alpha = 0.9f)
                         )
                     }
                 }
@@ -275,7 +279,7 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                                 // Aktiv? Markierung
                                 if (index == viewModel.currentIntervalIndex) {
                                     Icon(
-                                        imageVector = Icons.Default.PlayArrow,
+                                        imageVector = Icons.Default.Autorenew,
                                         contentDescription = "Aktiv",
                                         tint = Color.Black,
                                         modifier = Modifier.size(30.dp)
