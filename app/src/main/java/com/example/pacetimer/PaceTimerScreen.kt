@@ -64,6 +64,8 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.layout.fillMaxWidth
 
 
 @Composable
@@ -194,6 +196,36 @@ fun PaceTimerScreen(viewModel: PaceTimerViewModel = androidx.lifecycle.viewmodel
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Medium,
                             color = White.copy(alpha = 0.9f)
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+// aktuelles Intervall holen
+                        val currentInterval =
+                            if (viewModel.currentIntervalIndex < viewModel.intervals.size) {
+                                viewModel.intervals[viewModel.currentIntervalIndex]
+                            } else null
+
+// Fortschritt: 0f = Start, 1f = fertig
+                        val progress =
+                            if (currentInterval != null && currentInterval.duration > 0L) {
+                                1f - (viewModel.currentTimeLeft.toFloat() / currentInterval.duration.toFloat())
+                            } else 0f
+
+                        LinearProgressIndicator(
+                            progress = { progress.coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(8.dp),
+                            color = borderColor,
+                            trackColor = Color.DarkGray
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = "${(progress * 100).toInt()} %",
+                            fontSize = 14.sp,
+                            color = Color.White.copy(alpha = 0.9f)
                         )
                     }
                 }
